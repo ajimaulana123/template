@@ -28,9 +28,9 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   experimental: {
-    optimizePackageImports: ['@prisma/client', 'lucide-react'],
+    optimizePackageImports: ['lucide-react'],
   },
 }
 

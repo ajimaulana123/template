@@ -1,6 +1,22 @@
 # Documentation
+docs/
 README.md
-SETUP.md
+CHANGELOG.md
 
 # Development files
 .env.example
+.vscode/
+
+# Tests
+tests/
+playwright-report/
+test-results/
+*.spec.ts
+playwright.config.ts
+
+# Scripts
+scripts/
+
+# Git
+.git/
+.gitignore
