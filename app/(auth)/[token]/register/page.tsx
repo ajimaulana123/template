@@ -16,6 +16,7 @@ export default function SecretRegisterPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [validToken, setValidToken] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {
     // Verify token
@@ -50,20 +51,25 @@ export default function SecretRegisterPage() {
 
     if (result.success && result.message) {
       setSuccess(result.message)
+      setRedirecting(true)
       setTimeout(() => {
         router.push('/login')
       }, 1500)
     } else if (result.message) {
       setError(result.message)
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
-  if (checking) {
+  if (checking || redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Verifying access...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          <p className="text-gray-600 text-sm">
+            {redirecting ? 'Registrasi berhasil, mengalihkan ke login...' : 'Memverifikasi akses...'}
+          </p>
+        </div>
       </div>
     )
   }
@@ -137,7 +143,14 @@ export default function SecretRegisterPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : 'Register'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Memproses...
+                </span>
+              ) : (
+                'Register'
+              )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">

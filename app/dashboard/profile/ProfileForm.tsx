@@ -25,6 +25,7 @@ export default function ProfileForm({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [previewImage, setPreviewImage] = useState(profile?.fotoProfil || '')
+  const [uploadDisabled, setUploadDisabled] = useState(false)
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -63,13 +64,23 @@ export default function ProfileForm({
         setPreviewImage(result.url)
         router.refresh()
       } else {
-        setError(result.message)
+        // Display user-friendly error message
+        const errorMsg = result.message || 'Gagal mengupload foto. Silakan coba lagi.'
+        setError(errorMsg)
+        
+        // Disable upload if it's a configuration issue
+        if (response.status === 503) {
+          setUploadDisabled(true)
+        }
       }
     } catch (error) {
-      setError('Terjadi kesalahan saat upload foto.')
+      console.error('Upload error:', error)
+      setError('Koneksi bermasalah. Periksa internet Anda dan coba lagi.')
+    } finally {
+      setUploading(false)
+      // Reset file input
+      e.target.value = ''
     }
-
-    setUploading(false)
   }
 
   const handleDelete = async () => {
@@ -158,13 +169,19 @@ export default function ProfileForm({
             <label htmlFor="fileUpload" className="text-sm font-medium">
               Upload Foto Profil
             </label>
+            {uploadDisabled && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm p-3 rounded-md mb-2">
+                <p className="font-medium">⚠️ Fitur upload foto tidak tersedia</p>
+                <p className="text-xs mt-1">Silakan hubungi administrator untuk mengaktifkan fitur ini.</p>
+              </div>
+            )}
             <Input
               id="fileUpload"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={handleFileUpload}
-              disabled={uploading}
-              className="cursor-pointer"
+              disabled={uploading || uploadDisabled}
+              className="cursor-pointer disabled:cursor-not-allowed"
             />
             <p className="text-xs text-gray-500">
               Format: JPEG, PNG, WebP, GIF. Maksimal 2MB.
@@ -172,7 +189,7 @@ export default function ProfileForm({
             {uploading && (
               <div className="flex items-center gap-2 text-sm text-blue-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span>Uploading...</span>
+                <span>Mengupload foto...</span>
               </div>
             )}
           </div>

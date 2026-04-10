@@ -21,7 +21,11 @@ export const supabaseAdmin = supabaseServiceKey
 export async function uploadAvatar(fileBuffer: Buffer, fileName: string, contentType: string) {
   try {
     if (!supabaseAdmin) {
-      throw new Error('Supabase admin client not configured. Add SUPABASE_SERVICE_ROLE_KEY to .env')
+      return {
+        success: false,
+        error: 'Fitur upload foto belum dikonfigurasi. Silakan hubungi administrator.',
+        errorCode: 'CONFIG_MISSING'
+      }
     }
 
     // Upload to Supabase Storage using admin client (bypasses RLS)
@@ -34,6 +38,23 @@ export async function uploadAvatar(fileBuffer: Buffer, fileName: string, content
       })
 
     if (error) {
+      // Handle specific Supabase errors
+      if (error.message.includes('Bucket not found') || error.message.includes('bucket')) {
+        return {
+          success: false,
+          error: 'Penyimpanan foto belum tersedia. Silakan hubungi administrator untuk mengaktifkan fitur ini.',
+          errorCode: 'BUCKET_NOT_FOUND'
+        }
+      }
+      
+      if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+        return {
+          success: false,
+          error: 'File dengan nama yang sama sudah ada. Silakan coba lagi.',
+          errorCode: 'DUPLICATE_FILE'
+        }
+      }
+
       throw error
     }
 
@@ -49,9 +70,20 @@ export async function uploadAvatar(fileBuffer: Buffer, fileName: string, content
     }
   } catch (error: any) {
     console.error('Upload error:', error)
+    
+    // Provide user-friendly error messages
+    let userMessage = 'Gagal mengupload foto. Silakan coba lagi.'
+    
+    if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      userMessage = 'Koneksi bermasalah. Periksa internet Anda dan coba lagi.'
+    } else if (error.message?.includes('timeout')) {
+      userMessage = 'Upload timeout. File terlalu besar atau koneksi lambat.'
+    }
+    
     return {
       success: false,
-      error: error.message || 'Failed to upload file',
+      error: userMessage,
+      errorCode: 'UNKNOWN_ERROR'
     }
   }
 }

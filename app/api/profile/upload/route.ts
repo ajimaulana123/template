@@ -72,9 +72,14 @@ export async function POST(request: Request) {
     const uploadResult = await uploadAvatar(buffer, fileName, file.type)
 
     if (!uploadResult.success) {
+      // Return appropriate status code based on error type
+      const statusCode = uploadResult.errorCode === 'CONFIG_MISSING' || uploadResult.errorCode === 'BUCKET_NOT_FOUND' 
+        ? 503 // Service Unavailable
+        : 400 // Bad Request
+        
       return NextResponse.json(
         { success: false, message: uploadResult.error },
-        { status: 400 }
+        { status: statusCode }
       )
     }
 

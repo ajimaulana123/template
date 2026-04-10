@@ -1,18 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { loginAction } from '@/app/actions/auth-actions'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {
     // Check if already logged in
@@ -20,6 +20,7 @@ export default function LoginPage() {
       .then(res => res.json())
       .then(data => {
         if (data.authenticated) {
+          setRedirecting(true)
           router.push('/dashboard')
         } else {
           setChecking(false)
@@ -37,19 +38,25 @@ export default function LoginPage() {
     const result = await loginAction(null, formData)
 
     if (result.success && result.role) {
+      setRedirecting(true)
+      // Keep loading state active during redirect
       router.push('/dashboard')
       router.refresh()
     } else if (result.message) {
       setError(result.message)
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
-  if (checking) {
+  if (checking || redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Loading...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          <p className="text-gray-600 text-sm">
+            {redirecting ? 'Login berhasil, mengalihkan...' : 'Memeriksa sesi...'}
+          </p>
+        </div>
       </div>
     )
   }
@@ -100,7 +107,14 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : 'Login'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Memproses...
+                </span>
+              ) : (
+                'Login'
+              )}
             </Button>
           </form>
         </CardContent>
